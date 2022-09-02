@@ -2,52 +2,49 @@ package com.raywenderlich.listmaker.ui.main
 
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
-import models.TaskList
+import com.raywenderlich.listmaker.models.TaskList
 
-// 1
-class MainViewModel(private val sharedPreferences:
-                    SharedPreferences
-) : ViewModel() {
+class MainViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
 
-    lateinit var list: TaskList
+    lateinit var onListAdded: (() -> Unit)
+
     lateinit var onTaskAdded: (() -> Unit)
 
-    fun addTask(task: String) {
-        list.tasks.add(task)
-        onTaskAdded.invoke()
-    }
+    lateinit var list: TaskList
 
-    // 2
-    lateinit var onListAdded: (() -> Unit)
-    // 3
     val lists: MutableList<TaskList> by lazy {
         retrieveLists()
     }
-    // 4
+
+    fun addTask(task: String) {
+        list.tasks.add(task)
+        updateList(list)
+    }
+
     private fun retrieveLists(): MutableList<TaskList> {
+
         val sharedPreferencesContents = sharedPreferences.all
         val taskLists = ArrayList<TaskList>()
+
         for (taskList in sharedPreferencesContents) {
-            val itemsHashSet = ArrayList(taskList.value as
-                    HashSet<String>)
+            val itemsHashSet = ArrayList(taskList.value as HashSet<String>)
             val list = TaskList(taskList.key, itemsHashSet)
             taskLists.add(list)
         }
+
         return taskLists
     }
-    // 5
+
     fun saveList(list: TaskList) {
-        sharedPreferences.edit().putStringSet(list.name,
-            list.tasks.toHashSet()).apply()
+        sharedPreferences.edit().putStringSet(list.name, list.tasks.toHashSet()).apply()
         lists.add(list)
         onListAdded.invoke()
     }
 
     fun updateList(list: TaskList) {
-        sharedPreferences.edit().putStringSet(list.name,
-            list.tasks.toHashSet()).apply()
-        lists.add(list)
+        sharedPreferences.edit().putStringSet(list.name, list.tasks.toHashSet()).apply()
     }
+
     fun refreshLists() {
         lists.clear()
         lists.addAll(retrieveLists())

@@ -17,8 +17,7 @@ import com.raywenderlich.listmaker.ui.detail.ui.detail.ListDetailFragment
 import com.raywenderlich.listmaker.ui.main.MainFragment
 import com.raywenderlich.listmaker.ui.main.MainViewModel
 import com.raywenderlich.listmaker.ui.main.MainViewModelFactory
-import models.TaskList
-import android.view.LayoutInflater
+import com.raywenderlich.listmaker.models.TaskList
 
 class MainActivity : AppCompatActivity(), MainFragment.MainFragmentInteractionListener {
 
@@ -39,7 +38,12 @@ class MainActivity : AppCompatActivity(), MainFragment.MainFragmentInteractionLi
             val mainFragment = MainFragment.newInstance()
             mainFragment.clickListener = this
             // 2
-            val fragmentContainerViewId: Int = R.id.main_fragment_container
+            val fragmentContainerViewId: Int = if
+                                                       (binding.mainFragmentContainer == null) {
+                R.id.detail_container
+            } else {
+                R.id.main_fragment_container
+            }
 
             // 3
             supportFragmentManager.commit {
@@ -54,18 +58,16 @@ class MainActivity : AppCompatActivity(), MainFragment.MainFragmentInteractionLi
     }
 
     override fun onBackPressed() {
-
         // 1
         val listDetailFragment =
-            supportFragmentManager.findFragmentById(R.id.list_detail_fragment_container)
 
+            supportFragmentManager.findFragmentById(R.id.list_detail_fragment_container)
         // 2
         if (listDetailFragment == null) {
             super.onBackPressed()
         } else {
             // 3
             title = resources.getString(R.string.app_name)
-
             // 4
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
@@ -118,20 +120,24 @@ class MainActivity : AppCompatActivity(), MainFragment.MainFragmentInteractionLi
     }
 
     private fun showListDetail(list: TaskList) {
-
         if (binding.mainFragmentContainer == null) {
-            val listDetailIntent = Intent(this, ListDetailActivity::class.java)
+            val listDetailIntent = Intent(
+                this,
+                ListDetailActivity::class.java
+            )
             listDetailIntent.putExtra(INTENT_LIST_KEY, list)
-            startActivityForResult(listDetailIntent, LIST_DETAIL_REQUEST_CODE)
+            startActivityForResult(
+                listDetailIntent,
+                LIST_DETAIL_REQUEST_CODE
+            )
         } else {
             val bundle = bundleOf(INTENT_LIST_KEY to list)
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                replace(R.id.list_detail_fragment_container, ListDetailFragment::class.java, bundle)
-            }
-
-            binding.fabButton.setOnClickListener {
-                showCreateTaskDialog()
+                replace(
+                    R.id.list_detail_fragment_container,
+                    ListDetailFragment::class.java, bundle, null
+                )
             }
         }
     }
